@@ -71,7 +71,7 @@ def process_adult(df):
     return df
 
 
-def preprocess_compass(df):
+def preprocess_compas(df):
     df['age_cat'] = df['age_cat'].map({'Less than 25': 0, '25 - 45': 1, 'Greater than 45': 2}).astype(int)    
     df['score_text'] = df['score_text'].map({'Low': 0, 'Medium': 1, 'High': 2}).astype(int)    
     df['race'] = df['race'].map({'Other': 0, 'African-American': 0, 'Hispanic': 0, 'Native American': 0, 'Asian': 0, 'Caucasian': 1}).astype(int)
@@ -135,7 +135,7 @@ def load_compas():
     df = pd.read_csv('compas-scores-two-years.csv')
     df = df[['event', 'is_violent_recid', 'is_recid', 'priors_count', 'juv_other_count',\
              'juv_misd_count', 'juv_fel_count', 'race', 'age_cat', 'sex','score_text']]
-    df = preprocess_compass(df)
+    df = preprocess_compas(df)
 
     y = df['is_recid']
     # y = df['is_violent_recid']
