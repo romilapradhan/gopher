@@ -3,34 +3,31 @@ import numpy as np
 from sklearn.model_selection import train_test_split, KFold, cross_val_score, StratifiedKFold, cross_val_score, GridSearchCV, RepeatedStratifiedKFold
 
 
-def preprocess_german(df):
+def preprocess_german(df, preprocess):
     df['status'] = df['status'].map({'A11': 0, 'A12': 1, 'A13': 2, 'A14': 3}).astype(int)
-
-    df.loc[(df['duration'] <= 12), 'duration'] = 0
-    df.loc[(df['duration'] > 12) & (df['duration'] <= 24), 'duration'] = 1
-    df.loc[(df['duration'] > 24) & (df['duration'] <= 36), 'duration'] = 2
-    df.loc[(df['duration'] > 36), 'duration'] = 3    
-
-    df['credit_hist'] = df['credit_hist'].map({'A34': 0, 'A33': 1, 'A32': 2, 'A31': 3, 'A30': 4}).astype(int)    
-    df = pd.concat([df, pd.get_dummies(df['purpose'], prefix='purpose')],axis=1)
-
+    df['credit_hist'] = df['credit_hist'].map({'A34': 0, 'A33': 1, 'A32': 2, 'A31': 3, 'A30': 4}).astype(int)
     df.loc[(df['credit_amt'] <= 2000), 'credit_amt'] = 0
     df.loc[(df['credit_amt'] > 2000) & (df['credit_amt'] <= 5000), 'credit_amt'] = 1
     df.loc[(df['credit_amt'] > 5000), 'credit_amt'] = 2    
+    df.loc[(df['duration'] <= 12), 'duration'] = 0
+    df.loc[(df['duration'] > 12) & (df['duration'] <= 24), 'duration'] = 1
+    df.loc[(df['duration'] > 24) & (df['duration'] <= 36), 'duration'] = 2
+    df.loc[(df['duration'] > 36), 'duration'] = 3
+    df['age'] = df['age'].apply(lambda x : 1 if x >= 45 else 0) # 1 if old, 0 if young
 
     df['savings'] = df['savings'].map({'A61': 0, 'A62': 1, 'A63': 2, 'A64': 3, 'A65': 4}).astype(int)
     df['employment'] = df['employment'].map({'A71': 0, 'A72': 1, 'A73': 2, 'A74': 3, 'A75': 4}).astype(int)    
     df['gender'] = df['personal_status'].map({'A91': 1, 'A92': 0, 'A93': 1, 'A94': 1, 'A95': 0}).astype(int)
     df['debtors'] = df['debtors'].map({'A101': 0, 'A102': 1, 'A103': 2}).astype(int)
     df['property'] = df['property'].map({'A121': 3, 'A122': 2, 'A123': 1, 'A124': 0}).astype(int)        
-    df['age'] = df['age'].apply(lambda x : 1 if x >= 45 else 0) # 1 if old, 0 if young
     df['install_plans'] = df['install_plans'].map({'A141': 1, 'A142': 1, 'A143': 0}).astype(int)
-    df = pd.concat([df, pd.get_dummies(df['housing'], prefix='housing')],axis=1)
+    if preprocess:
+        df = pd.concat([df, pd.get_dummies(df['purpose'], prefix='purpose')],axis=1)
+        df = pd.concat([df, pd.get_dummies(df['housing'], prefix='housing')],axis=1)
     df['job'] = df['job'].map({'A171': 0, 'A172': 1, 'A173': 2, 'A174': 3}).astype(int)    
     df['telephone'] = df['telephone'].map({'A191': 0, 'A192': 1}).astype(int)
     df['foreign_worker'] = df['foreign_worker'].map({'A201': 1, 'A202': 0}).astype(int)
 
-    df['credit'] = df['credit'].replace(2, 0) #1 = Good, 2= Bad credit risk
     return df
 
 
@@ -95,16 +92,19 @@ def preprocess_compas(df):
     return df
 
 
-def load_german():
+def load_german(preprocess=True):
     cols = ['status', 'duration', 'credit_hist', 'purpose', 'credit_amt', 'savings', 'employment',\
             'install_rate', 'personal_status', 'debtors', 'residence', 'property', 'age', 'install_plans',\
             'housing', 'num_credits', 'job', 'num_liable', 'telephone', 'foreign_worker', 'credit']
     df = pd.read_table('german.data', names=cols, sep=" ", index_col=False)
-    df = preprocess_german(df)
-
+    df['credit'] = df['credit'].replace(2, 0) #1 = Good, 2= Bad credit risk
     y = df['credit']
-    df = df.drop(columns=['purpose', 'personal_status', 'housing', 'credit'])
-
+    df = preprocess_german(df, preprocess)
+    if preprocess:
+        df = df.drop(columns=['purpose', 'personal_status', 'housing', 'credit'])
+    else:
+        df = df.drop(columns=['personal_status', 'credit'])
+    
     X_train, X_test, y_train, y_test = train_test_split(df, y, test_size=0.2, random_state=1)
     X_train = X_train.reset_index(drop=True)
     X_test = X_test.reset_index(drop=True)
@@ -149,12 +149,12 @@ def load_compas():
     return X_train, X_test, y_train, y_test
 
 
-def load(dataset):
+def load(dataset, preprocess=True):
     if dataset == 'compas':
         return load_compas()
     elif dataset == 'adult':
         return load_adult()
     elif dataset == 'german':
-        return load_german()
+        return load_german(preprocess)
     else:
         raise NotImplementedError
