@@ -1,0 +1,19 @@
+% Following colors are predefined: red, green, blue, cyan, magenta, yellow, black, gray, darkgray, lightgray, brown, lime, olive, orange, pink, purple, teal, violet and white.
+
+\documentclass[tikz,border=1pt]{standalone}
+\usetikzlibrary{shapes.misc, positioning}
+\usetikzlibrary{external} 
+\tikzsetexternalprefix{ffigurau} 
+\tikzexternalize
+
+\begin{document}
+    \begin{tikzpicture}[scale=1, every node/.style={scale=0.75}]
+        \node (1) [fill=blue!20,draw, rounded rectangle] {Liabilities $=1$};
+        \node (2) [right=of 1, xshift=-12.5mm] {$\wedge$};
+        \node (3) [fill=white!20, draw, right=of 2, xshift=-12.5mm, line width=0.4mm, rounded rectangle] {Purpose $=$ Car/Radio};
+        \node (4) [right=of 3, xshift=-12.5mm] {$\wedge$};
+        \node (5) [fill=white!20, draw, right=of 4, xshift=-12.5mm, line width=0.4mm, rounded rectangle] {Property $=$ Bldg. society};
+		\node (6) [right=of 5, xshift=-12.5mm] {$\wedge$};
+		\node (7) [fill=white!20, draw, right=of 6, xshift=-12.5mm, rounded rectangle] {Telephone $=$ Yes};
+    \end{tikzpicture}
+\end{document}
