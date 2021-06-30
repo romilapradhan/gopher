@@ -2,6 +2,7 @@ from sklearn.linear_model import LogisticRegression as sklr
 from sklearn.svm import SVC, LinearSVC
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, plot_tree
 from sklearn.neural_network import MLPClassifier
+from utils import *
 import numpy as np
 import torch.nn as nn
 import torch
@@ -53,6 +54,11 @@ class LogisticRegression(nn.Module):
     def predict_proba(self, x):
         self.eval()
         return self.forward(torch.FloatTensor(x)).detach().numpy()
+    
+    def load_weights_from_another_model(self, orig_model):
+        self.C = orig_model.C
+        self.lr.weight.data = orig_model.lr.weight.data.clone()
+        self.lr.bias.data = orig_model.lr.bias.data.clone()
 
 
 class SVM(nn.Module):
@@ -111,13 +117,14 @@ class NeuralNetwork(nn.Module):
         self.sm1 = torch.nn.Sigmoid()
         self.fc2 = torch.nn.Linear(20, 1)
         self.sm2 = torch.nn.Sigmoid()
+        self.input_size = input_size
 
         # best result according to grid search
-        self.sklearn_nn = MLPClassifier(random_state=0, alpha=0.01, learning_rate = 'adaptive',\
+        self.sklearn_nn = MLPClassifier(random_state=0, alpha=0.01, learning_rate = 'adaptive', batch_size=1024,\
                                         solver = 'adam', hidden_layer_sizes=(20,), activation='logistic')
 
     def forward(self, x):
-        x = x.view(-1, 31)
+        x = x.view(-1, self.input_size)
         x = self.fc1(x)
         x = self.sm1(x)
         x = self.fc2(x)
@@ -133,5 +140,5 @@ class NeuralNetwork(nn.Module):
 
     def predict_proba(self, x):
         self.eval()
-        x = torch.FloatTensor(x).view(-1, 31)
+        x = torch.FloatTensor(x).view(-1, self.input_size)
         return self.forward(x).detach().numpy()
