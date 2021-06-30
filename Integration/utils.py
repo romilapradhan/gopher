@@ -24,7 +24,11 @@ def logistic_loss_torch(model, x, y_true):
 
 def svm_loss_torch(clf, x, y_true):
     w = convert_grad_to_tensor(list(clf.parameters()))
-    return clf.C*torch.sum(w**2) + torch.mean(clf.smooth_hinge(1-torch.Tensor(y_true)*clf.decision_function(x)))
+    if isinstance(y_true, int) or isinstance(y_true, float):
+        y_true = torch.Tensor([y_true])
+    else:
+        y_true = torch.Tensor(y_true)
+    return 1/2*clf.C*torch.sum(w**2)+torch.mean(clf.smooth_hinge(1-y_true*clf.decision_function(x)))
 
 def convert_grad_to_ndarray(grad):
     grad_list = list(grad)
