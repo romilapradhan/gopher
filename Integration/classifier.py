@@ -66,10 +66,16 @@ class SVM(nn.Module):
         super(SVM, self).__init__()
         self.sklearn_svc = LinearSVC(random_state=0, loss='hinge')
         self.lr = torch.nn.Linear(input_size, 1, bias=True)
+        self.initialize_weights(self.lr)
         self.smooth_hinge = torch.nn.Softplus(beta=0.001)
+#         self.smooth_hinge = torch.nn.ReLU()
         if kernel != 'linear':
             raise NotImplementedError
 
+    def initialize_weights(self, m):
+        nn.init.kaiming_uniform_(m.weight.data)
+        m.bias.data.fill_(0)
+    
     def decision_function(self, x):
         if ~isinstance(x, torch.Tensor):
             x = torch.FloatTensor(x)
@@ -92,7 +98,7 @@ class SVM(nn.Module):
         else:
             criterion = svm_loss_torch
             self.C = c
-            optimizer = torch.optim.Adam(self.parameters(), amsgrad=True)
+            optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
             x = torch.FloatTensor(x)
             y = torch.FloatTensor(y)
             self.train()
@@ -108,6 +114,7 @@ class SVM(nn.Module):
     def predict_proba(self, x):
         self.eval()
         return self.forward(torch.FloatTensor(x)).detach().numpy()
+
 
 
 class NeuralNetwork(nn.Module):
