@@ -1,0 +1,28 @@
+% Following colors are predefined: red, green, blue, cyan, magenta, yellow, black, gray, darkgray, lightgray, brown, lime, olive, orange, pink, purple, teal, violet and white.
+
+\documentclass[tikz,border=1pt]{standalone}
+\usetikzlibrary{shapes.misc, positioning}
+\usetikzlibrary{external} 
+\tikzsetexternalprefix{ffigurau} 
+\tikzexternalize
+
+\begin{document}
+    \begin{tikzpicture}[scale=1, every node/.style={scale=0.75}]
+        \node (1) [fill=red!20,draw, rounded rectangle] {Gender $=$ Female};
+        \node (2) [right=of 1, xshift=-12.5mm] {$\wedge$};
+        \node (3) [fill=green!20, draw, right=of 2, xshift=-12.5mm, rounded rectangle] {Relationship $=$ Not married};
+        \node (4) [right=of 3, xshift=-12.5mm] {$\wedge$};
+        \node (5) [fill=white!20, draw, right=of 4, xshift=-12.5mm, rounded rectangle] {Education $=$ Associate-voc};
+%        \node (6) [right=of 5, xshift=-12.5mm] {$\wedge$};
+%        \node (7) [fill=white!20, draw, right=of 6, xshift=-12.5mm, rounded rectangle] {Workclass $=$ Private};
+    \end{tikzpicture}
+% Age>=45, Gender=Female, Sta-tus<0 DM, Number liable=1
+%   \begin{tikzpicture}
+%     \draw (0,0) arc[radius=5pt,start angle= 90,end angle=270];
+%     \draw (0,0) rectangle (40pt,-20pt);
+%     \draw (40pt,0) arc[radius=5pt,start angle=90,end angle=-90];
+%   \end{tikzpicture}
+    % \node (2) [below=of 1, draw, rounded rectangle, rounded rectangle west arc=0pt] {rounded rectangle};
+    % \node (3) [below=of 2, draw, rounded rectangle, rounded rectangle east arc=0pt] {rounded rectangle};
+  
+\end{document}

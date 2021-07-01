@@ -1,0 +1,13 @@
+% Following colors are predefined: red, green, blue, cyan, magenta, yellow, black, gray, darkgray, lightgray, brown, lime, olive, orange, pink, purple, teal, violet and white.
+
+\documentclass[tikz,border=1pt]{standalone}
+\usetikzlibrary{shapes.misc, positioning}
+\usetikzlibrary{external} 
+\tikzsetexternalprefix{ffigurau} 
+\tikzexternalize
+
+\begin{document}
+	\begin{tikzpicture}[scale=1, every node/.style={scale=0.75}]
+	\node (1) [fill=white!20,draw, rounded rectangle] {Juvenile misdemeanors $=0$};
+	\end{tikzpicture}
+\end{document}
