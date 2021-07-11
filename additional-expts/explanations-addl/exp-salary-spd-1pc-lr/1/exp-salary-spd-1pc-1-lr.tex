@@ -1,0 +1,17 @@
+% Following colors are predefined: red, green, blue, cyan, magenta, yellow, black, gray, darkgray, lightgray, brown, lime, olive, orange, pink, purple, teal, violet and white.
+
+\documentclass[tikz,border=1pt]{standalone}
+\usetikzlibrary{shapes.misc, positioning}
+\usetikzlibrary{external} 
+\tikzsetexternalprefix{ffigurau} 
+\tikzexternalize
+
+\begin{document}
+    \begin{tikzpicture}[scale=1, every node/.style={scale=0.75}]
+        \node (1) [fill=red!20,draw, rounded rectangle] {Rank $=$ Associate Professor};
+        \node (2) [right=of 1, xshift=-12.5mm] {$\wedge$};
+        \node (3) [fill=white!20, draw, right=of 2, xshift=-12.5mm, rounded rectangle] {Years in current role $\in [5, 10]$};
+%        \node (4) [right=of 3, xshift=-12.5mm] {$\wedge$};
+%        \node (5) [fill=white!20, draw, right=of 4, xshift=-12.5mm, rounded rectangle] {Education $=$ Associate-voc};
+    \end{tikzpicture}
+\end{document}
