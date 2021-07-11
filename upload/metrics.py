@@ -20,6 +20,11 @@ def computeFairness(y_pred, X_test, y_test, metric, dataset):
         numProtected = len(protected_idx)
         privileged_idx = X_test[X_test['gender']==1].index
         numPrivileged = len(privileged_idx)
+    elif dataset == 'salary':
+        protected_idx = X_test[X_test['sex']==0].index
+        numProtected = len(protected_idx)
+        privileged_idx = X_test[X_test['sex']==1].index
+        numPrivileged = len(privileged_idx)
 
     p_protected = 0
     for i in range(len(protected_idx)):
@@ -103,6 +108,9 @@ def del_spd_del_theta(model, X_test_orig, X_test, dataset):
     elif dataset == 'adult':
         numPrivileged = X_test_orig['gender'].sum()
         numProtected = len(X_test_orig) - numPrivileged
+    elif dataset == 'salary':
+        numPrivileged = X_test_orig['sex'].sum()
+        numProtected = len(X_test_orig) - numPrivileged
     
     for i in range(len(X_test)):
         del_f_i = del_f_del_theta_i(model, X_test[i])
@@ -121,6 +129,11 @@ def del_spd_del_theta(model, X_test_orig, X_test, dataset):
             if X_test_orig.iloc[i]['gender'] == 1: #privileged
                 del_f_privileged += del_f_i_arr
             elif X_test_orig.iloc[i]['gender'] == 0:
+                del_f_protected += del_f_i_arr
+        elif dataset == 'salary':
+            if X_test_orig.iloc[i]['sex'] == 1: #privileged
+                del_f_privileged += del_f_i_arr
+            elif X_test_orig.iloc[i]['sex'] == 0:
                 del_f_protected += del_f_i_arr
 
     del_f_privileged /= numPrivileged
@@ -148,6 +161,11 @@ def del_tpr_parity_del_theta(model, X_test_orig, X_test, y_test, dataset):
         protected_idx = X_test_orig[X_test_orig['gender']==0].index
         numProtected = len(protected_idx)
         privileged_idx = X_test_orig[X_test_orig['gender']==1].index
+        numPrivileged = len(privileged_idx)
+    elif dataset == 'salary':
+        protected_idx = X_test_orig[X_test_orig['sex']==0].index
+        numProtected = len(protected_idx)
+        privileged_idx = X_test_orig[X_test_orig['sex']==1].index
         numPrivileged = len(privileged_idx)
 
     actual_positive_privileged = 0
@@ -192,6 +210,11 @@ def del_predictive_parity_del_theta(model, X_test_orig, X_test, y_test, dataset)
         protected_idx = X_test_orig[X_test_orig['gender']==0].index
         numProtected = len(protected_idx)
         privileged_idx = X_test_orig[X_test_orig['gender']==1].index
+        numPrivileged = len(privileged_idx)
+    elif dataset == 'salary':
+        protected_idx = X_test_orig[X_test_orig['sex']==0].index
+        numProtected = len(protected_idx)
+        privileged_idx = X_test_orig[X_test_orig['sex']==1].index
         numPrivileged = len(privileged_idx)
 
     u_dash_protected = np.zeros((num_params,))
