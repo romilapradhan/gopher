@@ -42,7 +42,8 @@ def process_adult(df):
     # dropping the NaN rows now
     df.dropna(how='any',inplace=True)
     df['income'] = df['income'].map({'<=50K': 0, '>50K': 1}).astype(int)
-    df = pd.concat([df, pd.get_dummies(df['gender'], prefix='gender')],axis=1)
+    df['gender'] = df['gender'].map({'Female': 0, 'Male': 1}).astype(int)
+#     df = pd.concat([df, pd.get_dummies(df['gender'], prefix='gender')],axis=1)
     df = pd.concat([df, pd.get_dummies(df['race'], prefix='race')],axis=1)
     df = pd.concat([df, pd.get_dummies(df['marital'], prefix='marital')],axis=1)
     df = pd.concat([df, pd.get_dummies(df['workclass'], prefix='workclass')],axis=1)
@@ -62,9 +63,12 @@ def process_adult(df):
     df.loc[(df['hours'] == 40), 'hours'] = 1
     df.loc[(df['hours'] > 40), 'hours'] = 2
 
-    df = df.drop(columns=['workclass', 'gender', 'fnlwgt', 'education', 'occupation', \
-                      'relationship', 'marital', 'race', 'country', 'capgain', \
-                      'caploss'])
+#     df = df.drop(columns=['workclass', 'gender', 'fnlwgt', 'education', 'occupation', \
+#                       'relationship', 'marital', 'race', 'country', 'capgain', \
+#                       'caploss'])
+    df = df.drop(columns=['workclass', 'fnlwgt', 'education', 'occupation', \
+                  'relationship', 'marital', 'race', 'country', 'capgain', \
+                  'caploss'])
     return df
 
 
@@ -149,12 +153,67 @@ def load_compas():
     return X_train, X_test, y_train, y_test
 
 
-def load(dataset, preprocess=True):
+def load_traffic():
+    df = pd.read_csv('traffic_violations_cleaned.csv')
+    y = df['search_outcome']
+    df = df.drop(columns=['search_outcome'])
+    X_train, X_test, y_train, y_test = train_test_split(df, y, test_size=0.2, random_state=1)
+    X_train = X_train.reset_index(drop=True)
+    X_test = X_test.reset_index(drop=True)
+    y_train = y_train.reset_index(drop=True)
+    y_test = y_test.reset_index(drop=True)
+    return X_train, X_test, y_train, y_test
+
+
+def load_sqf():
+    df_train = pd.read_csv('sqf_train.csv')
+    y_train = df_train['frisked']
+    X_train = df_train.drop(columns=['frisked'])
+    
+    df_test = pd.read_csv('sqf_test.csv')
+    y_test = df_test['frisked']
+    X_test = df_test.drop(columns=['frisked'])
+    
+    X_train = X_train.reset_index(drop=True)
+    X_test = X_test.reset_index(drop=True)
+    y_train = y_train.reset_index(drop=True)
+    y_test = y_test.reset_index(drop=True)
+    return X_train, X_test, y_train, y_test
+
+
+def load(dataset, preprocess=True, row_num=10000, attr_num=30):
     if dataset == 'compas':
         return load_compas()
     elif dataset == 'adult':
         return load_adult()
     elif dataset == 'german':
         return load_german(preprocess)
+    elif dataset == 'traffic':
+        return load_traffic()
+    elif dataset == 'sqf':
+        return load_sqf()
+    elif dataset == 'random':
+        return generate_random_dataset(row_num, attr_num)
     else:
         raise NotImplementedError
+        
+        
+def generate_random_dataset(row_num, attr_num):
+    cols_ls = list()
+    for attr_idx in range(attr_num):
+        col = np.random.binomial(n=1, p=0.5, size=(row_num, 1))
+        cols_ls.append(col)
+    X_mat = np.concatenate(cols_ls, axis=1)
+    noise = np.random.binomial(n=2, p=0.03, size=(row_num, 1))
+    random_coef = np.random.random(attr_num)
+    
+    X = pd.DataFrame(X_mat, columns=[f'A{attr_idx}' for attr_idx in range(attr_num)])
+    y = pd.Series(np.where((np.dot(X_mat, random_coef.reshape(-1, 1))+noise)>attr_num*0.25, 1, 0).ravel(), name='foo')
+    X['AA'] = np.random.binomial(n=1, p=0.5, size=(row_num, 1))
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train = X_train.reset_index(drop=True)
+    X_test = X_test.reset_index(drop=True)
+    y_train = y_train.reset_index(drop=True)
+    y_test = y_test.reset_index(drop=True)
+    
+    return X_train, X_test, y_train, y_test

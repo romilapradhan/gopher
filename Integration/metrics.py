@@ -1,7 +1,15 @@
 from utils import del_f_del_theta_i, convert_grad_to_ndarray
 from torch.autograd import grad
+import torch
 import numpy as np
+import json
 
+with open('config.json', 'r') as f:
+    txt = f.read()
+    dtype = json.loads(txt)['dtype']
+    f.close()
+if dtype == 'double':
+    torch.set_default_tensor_type(torch.DoubleTensor)
 
 def computeFairness(y_pred, X_test, y_test, metric, dataset): 
     fairnessMetric = 0
@@ -19,6 +27,21 @@ def computeFairness(y_pred, X_test, y_test, metric, dataset):
         protected_idx = X_test[X_test['gender']==0].index
         numProtected = len(protected_idx)
         privileged_idx = X_test[X_test['gender']==1].index
+        numPrivileged = len(privileged_idx)
+    elif dataset == 'traffic':
+        protected_idx = X_test[X_test['race']==0].index
+        numProtected = len(protected_idx)
+        privileged_idx = X_test[X_test['race']==1].index
+        numPrivileged = len(privileged_idx)
+    elif dataset == 'sqf':
+        protected_idx = X_test[X_test['race']==0].index
+        numProtected = len(protected_idx)
+        privileged_idx = X_test[X_test['race']==1].index
+        numPrivileged = len(privileged_idx)
+    elif dataset == 'random':
+        protected_idx = X_test[X_test['AA']==0].index
+        numProtected = len(protected_idx)
+        privileged_idx = X_test[X_test['AA']==1].index
         numPrivileged = len(privileged_idx)
 
     p_protected = 0
@@ -103,7 +126,16 @@ def del_spd_del_theta(model, X_test_orig, X_test, dataset):
     elif dataset == 'adult':
         numPrivileged = X_test_orig['gender'].sum()
         numProtected = len(X_test_orig) - numPrivileged
-    
+    elif dataset == 'traffic':
+        numPrivileged = X_test_orig['race'].sum()
+        numProtected = len(X_test_orig) - numPrivileged
+    elif dataset == 'sqf':
+        numPrivileged = X_test_orig['race'].sum()
+        numProtected = len(X_test_orig) - numPrivileged
+    elif dataset == 'random':
+        numPrivileged = X_test_orig['AA'].sum()
+        numProtected = len(X_test_orig) - numPrivileged
+
     for i in range(len(X_test)):
         del_f_i = del_f_del_theta_i(model, X_test[i])
         del_f_i_arr = convert_grad_to_ndarray(del_f_i)
@@ -121,6 +153,21 @@ def del_spd_del_theta(model, X_test_orig, X_test, dataset):
             if X_test_orig.iloc[i]['gender'] == 1: #privileged
                 del_f_privileged += del_f_i_arr
             elif X_test_orig.iloc[i]['gender'] == 0:
+                del_f_protected += del_f_i_arr
+        elif dataset == 'traffic':
+            if X_test_orig.iloc[i]['race'] == 1: #privileged
+                del_f_privileged += del_f_i_arr
+            elif X_test_orig.iloc[i]['race'] == 0:
+                del_f_protected += del_f_i_arr
+        elif dataset == 'sqf':
+            if X_test_orig.iloc[i]['race'] == 1: #privileged
+                del_f_privileged += del_f_i_arr
+            elif X_test_orig.iloc[i]['race'] == 0:
+                del_f_protected += del_f_i_arr
+        elif dataset == 'random':
+            if X_test_orig.iloc[i]['AA'] == 1: #privileged
+                del_f_privileged += del_f_i_arr
+            elif X_test_orig.iloc[i]['AA'] == 0:
                 del_f_protected += del_f_i_arr
 
     del_f_privileged /= numPrivileged
@@ -148,6 +195,21 @@ def del_tpr_parity_del_theta(model, X_test_orig, X_test, y_test, dataset):
         protected_idx = X_test_orig[X_test_orig['gender']==0].index
         numProtected = len(protected_idx)
         privileged_idx = X_test_orig[X_test_orig['gender']==1].index
+        numPrivileged = len(privileged_idx)
+    elif dataset == 'traffic':
+        protected_idx = X_test_orig[X_test_orig['race']==0].index
+        numProtected = len(protected_idx)
+        privileged_idx = X_test_orig[X_test_orig['race']==1].index
+        numPrivileged = len(privileged_idx)
+    elif dataset == 'sqf':
+        protected_idx = X_test_orig[X_test_orig['race']==0].index
+        numProtected = len(protected_idx)
+        privileged_idx = X_test_orig[X_test_orig['race']==1].index
+        numPrivileged = len(privileged_idx)
+    elif dataset == 'random':
+        protected_idx = X_test_orig[X_test_orig['AA']==0].index
+        numProtected = len(protected_idx)
+        privileged_idx = X_test_orig[X_test_orig['AA']==1].index
         numPrivileged = len(privileged_idx)
 
     actual_positive_privileged = 0
@@ -192,6 +254,21 @@ def del_predictive_parity_del_theta(model, X_test_orig, X_test, y_test, dataset)
         protected_idx = X_test_orig[X_test_orig['gender']==0].index
         numProtected = len(protected_idx)
         privileged_idx = X_test_orig[X_test_orig['gender']==1].index
+        numPrivileged = len(privileged_idx)
+    elif dataset == 'traffic':
+        protected_idx = X_test_orig[X_test_orig['race']==0].index
+        numProtected = len(protected_idx)
+        privileged_idx = X_test_orig[X_test_orig['race']==1].index
+        numPrivileged = len(privileged_idx)
+    elif dataset == 'sqf':
+        protected_idx = X_test_orig[X_test_orig['race']==0].index
+        numProtected = len(protected_idx)
+        privileged_idx = X_test_orig[X_test_orig['race']==1].index
+        numPrivileged = len(privileged_idx)
+    elif dataset == 'random':
+        protected_idx = X_test_orig[X_test_orig['AA']==0].index
+        numProtected = len(protected_idx)
+        privileged_idx = X_test_orig[X_test_orig['AA']==1].index
         numPrivileged = len(privileged_idx)
 
     u_dash_protected = np.zeros((num_params,))
