@@ -96,6 +96,6 @@ def convert_grad_to_tensor(grad):
 #     return grad(loss, w, create_graph=True, retain_graph=retain_graph)
 
 
-# def del_f_del_theta_i(model, x, retain_graph=False):
-#     w = [p for p in model.parameters() if p.requires_grad]
-#     return grad(model(torch.Tensor(x)), w, retain_graph=retain_graph)
+def del_f_del_theta_i(model, x, retain_graph=False):
+    w = [p for p in model.parameters() if p.requires_grad]
+    return grad(model(torch.Tensor(x)), w, retain_graph=retain_graph)
