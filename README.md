@@ -30,7 +30,7 @@ Intergration/classifier.py contains implementation of classfiers including Logis
 
 ### SVM 
 
-smooth-hinge with $\beta=1$, linear kernal
+smooth-hinge with beta=1, linear kernal
 
 | Dataset | Learning Rate | Weight Decay | Epoch Num |
 | :-----: | :-----------: | :----------: | :-------: |
