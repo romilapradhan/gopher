@@ -31,44 +31,64 @@ def preprocess_german(df, preprocess):
     return df
 
 
+# def process_adult(df):
+#     df.isin(['?']).sum(axis=0)
+
+#     # replace missing values (?) to nan and then drop the columns
+#     df['country'] = df['country'].replace('?',np.nan)
+#     df['workclass'] = df['workclass'].replace('?',np.nan)
+#     df['occupation'] = df['occupation'].replace('?',np.nan)
+
+#     # dropping the NaN rows now
+#     df.dropna(how='any',inplace=True)
+#     df['income'] = df['income'].map({'<=50K': 0, '>50K': 1}).astype(int)
+#     df['gender'] = df['gender'].map({'Female': 0, 'Male': 1}).astype(int)
+# #     df = pd.concat([df, pd.get_dummies(df['gender'], prefix='gender')],axis=1)
+#     df = pd.concat([df, pd.get_dummies(df['race'], prefix='race')],axis=1)
+#     df = pd.concat([df, pd.get_dummies(df['marital'], prefix='marital')],axis=1)
+#     df = pd.concat([df, pd.get_dummies(df['workclass'], prefix='workclass')],axis=1)
+#     df = pd.concat([df, pd.get_dummies(df['relationship'], prefix='relationship')],axis=1)
+#     df = pd.concat([df, pd.get_dummies(df['occupation'], prefix='occupation')],axis=1)
+    
+#     # process age
+#     df.loc[(df['age'] >= 15) & (df['age'] <= 24) , 'age'] = 0
+#     df.loc[(df['age'] >= 25) & (df['age'] <= 34) , 'age'] = 1
+#     df.loc[(df['age'] >= 35) & (df['age'] <= 44) , 'age'] = 2
+#     df.loc[(df['age'] >= 45) & (df['age'] <= 54) , 'age'] = 3
+#     df.loc[(df['age'] >= 55) & (df['age'] <= 64) , 'age'] = 4
+#     df.loc[(df['age'] >= 65) , 'age'] = 5
+
+#     # process hours
+#     df.loc[(df['hours'] < 40), 'hours'] = 0
+#     df.loc[(df['hours'] == 40), 'hours'] = 1
+#     df.loc[(df['hours'] > 40), 'hours'] = 2
+
+#     df = df.drop(columns=['workclass', 'fnlwgt', 'education', 'occupation', \
+#                   'relationship', 'marital', 'race', 'country', 'capgain', \
+#                   'caploss'])
+#     return df
+
 def process_adult(df):
     df.isin(['?']).sum(axis=0)
-
     # replace missing values (?) to nan and then drop the columns
     df['country'] = df['country'].replace('?',np.nan)
     df['workclass'] = df['workclass'].replace('?',np.nan)
     df['occupation'] = df['occupation'].replace('?',np.nan)
-
     # dropping the NaN rows now
     df.dropna(how='any',inplace=True)
     df['income'] = df['income'].map({'<=50K': 0, '>50K': 1}).astype(int)
-    df['gender'] = df['gender'].map({'Female': 0, 'Male': 1}).astype(int)
-#     df = pd.concat([df, pd.get_dummies(df['gender'], prefix='gender')],axis=1)
-    df = pd.concat([df, pd.get_dummies(df['race'], prefix='race')],axis=1)
-    df = pd.concat([df, pd.get_dummies(df['marital'], prefix='marital')],axis=1)
-    df = pd.concat([df, pd.get_dummies(df['workclass'], prefix='workclass')],axis=1)
-    df = pd.concat([df, pd.get_dummies(df['relationship'], prefix='relationship')],axis=1)
-    df = pd.concat([df, pd.get_dummies(df['occupation'], prefix='occupation')],axis=1)
-    
-    # process age
-    df.loc[(df['age'] >= 15) & (df['age'] <= 24) , 'age'] = 0
-    df.loc[(df['age'] >= 25) & (df['age'] <= 34) , 'age'] = 1
-    df.loc[(df['age'] >= 35) & (df['age'] <= 44) , 'age'] = 2
-    df.loc[(df['age'] >= 45) & (df['age'] <= 54) , 'age'] = 3
-    df.loc[(df['age'] >= 55) & (df['age'] <= 64) , 'age'] = 4
-    df.loc[(df['age'] >= 65) , 'age'] = 5
-
+    df['age'] = df['age'].apply(lambda x : 1 if x >= 45 else 0) # 1 if old, 0 if young
+    df['workclass'] = df['workclass'].map({'Never-worked': 0, 'Without-pay': 1, 'State-gov': 2, 'Local-gov': 3, 'Federal-gov': 4, 'Self-emp-inc': 5, 'Self-emp-not-inc': 6, 'Private': 7}).astype(int)
+    df['education'] = df['education'].map({'Preschool': 0, '1st-4th': 1, '5th-6th': 2, '7th-8th': 3, '9th': 4, '10th': 5, '11th': 6, '12th': 7, 'HS-grad':8, 'Some-college': 9, 'Bachelors': 10, 'Prof-school': 11, 'Assoc-acdm': 12, 'Assoc-voc': 13, 'Masters': 14, 'Doctorate': 15}).astype(int)
+    df['marital'] = df['marital'].map({'Married-civ-spouse': 2, 'Divorced': 1, 'Never-married': 0, 'Separated': 1, 'Widowed': 1, 'Married-spouse-absent': 2, 'Married-AF-spouse': 2}).astype(int)
+    df['relationship'] = df['relationship'].map({'Wife': 1 , 'Own-child': 0 , 'Husband': 1, 'Not-in-family': 0, 'Other-relative': 0, 'Unmarried': 0}).astype(int)
+    df['race'] = df['race'].map({'White': 1, 'Asian-Pac-Islander': 0, 'Amer-Indian-Eskimo': 0, 'Other': 0, 'Black': 0}).astype(int)
+    df['gender'] = df['gender'].map({'Male': 1, 'Female': 0}).astype(int)
     # process hours
-    df.loc[(df['hours'] < 40), 'hours'] = 0
-    df.loc[(df['hours'] == 40), 'hours'] = 1
-    df.loc[(df['hours'] > 40), 'hours'] = 2
-
-#     df = df.drop(columns=['workclass', 'gender', 'fnlwgt', 'education', 'occupation', \
-#                       'relationship', 'marital', 'race', 'country', 'capgain', \
-#                       'caploss'])
-    df = df.drop(columns=['workclass', 'fnlwgt', 'education', 'occupation', \
-                  'relationship', 'marital', 'race', 'country', 'capgain', \
-                  'caploss'])
+    df.loc[(df['hours'] <= 40), 'hours'] = 0
+    df.loc[(df['hours'] > 40), 'hours'] = 1
+    df = df.drop(columns=['fnlwgt', 'education.num', 'occupation', 'country', 'capgain', 'caploss'])
+    df = df.reset_index(drop=True)
     return df
 
 
@@ -117,11 +137,16 @@ def load_german(preprocess=True):
     return X_train, X_test, y_train, y_test
 
 
-def load_adult():
+def load_adult(sample=False):
     cols = ['age', 'workclass', 'fnlwgt', 'education', 'education.num', 'marital', 'occupation',\
             'relationship', 'race', 'gender', 'capgain', 'caploss', 'hours', 'country', 'income']
-    df_train = pd.read_csv('adult.data', names=cols, sep=",")
-    df_test = pd.read_csv('adult.test', names=cols, sep=",")
+    if sample:
+        df_train = pd.read_csv('adult-sample-train-10pc', names=cols, sep=",")
+        df_test = pd.read_csv('adult-sample-test-10pc', names=cols, sep=",")
+    else:
+        df_train = pd.read_csv('adult.data', names=cols, sep=",")
+        df_test = pd.read_csv('adult.test', names=cols, sep=",")
+
     df_train = process_adult(df_train)
     df_test = process_adult(df_test)
 
@@ -181,11 +206,11 @@ def load_sqf():
     return X_train, X_test, y_train, y_test
 
 
-def load(dataset, preprocess=True, row_num=10000, attr_num=30):
+def load(dataset, preprocess=True, row_num=10000, attr_num=30, sample=False):
     if dataset == 'compas':
         return load_compas()
     elif dataset == 'adult':
-        return load_adult()
+        return load_adult(sample=sample)
     elif dataset == 'german':
         return load_german(preprocess)
     elif dataset == 'traffic':

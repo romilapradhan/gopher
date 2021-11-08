@@ -4,19 +4,31 @@ import pandas as pd
 import copy
 import random
 from load_dataset import load, generate_random_dataset
-from classifier import NeuralNetwork, LogisticRegression, SVM
+from classifier import LogisticRegression, SVM
 from utils import *
 from metrics import *  # include fairness and corresponding derivatives
 from sklearn.preprocessing import StandardScaler
 from operator import itemgetter
 from torch.autograd import grad
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--dup', type=int, default=1)
+
+args = parser.parse_args()
 
 random.seed(1)
 np.random.seed(1)
 torch.manual_seed(1)
 
-dataset = 'adult'
+dataset = 'german'
 X_train, X_test, y_train, y_test = load(dataset)
+duplicates = int(args.dup)
+make_duplicates = lambda x, d: pd.concat([x]*d, axis=0).reset_index(drop=True)
+X_train = make_duplicates(X_train, duplicates)
+X_test = make_duplicates(X_test, duplicates)
+y_train = make_duplicates(y_train, duplicates)
+y_test = make_duplicates(y_test, duplicates)
 
 X_train_orig = copy.deepcopy(X_train)
 X_test_orig = copy.deepcopy(X_test)
@@ -25,7 +37,7 @@ sc = StandardScaler()
 X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
 
-clf = NeuralNetwork(input_size=X_train.shape[-1])
+clf = LogisticRegression(input_size=X_train.shape[-1])
 num_params = len(convert_grad_to_ndarray(list(clf.parameters())))
 loss_func = logistic_loss_torch
 
@@ -131,7 +143,7 @@ def s_test(model, xs, ys, v, hinv=None, damp=0.01, scale=25.0, r=-1, batch_size=
     return hinv_v / scale
 
 
-clf = NeuralNetwork(input_size=X_train.shape[-1])
+clf = LogisticRegression(input_size=X_train.shape[-1])
 clf.fit(X_train, y_train)
 
 y_pred_test = clf.predict_proba(X_test)
@@ -265,7 +277,7 @@ print("del_f_threshold:", del_f_threshold)
 print("support_small:", support_small)
 print("del_f_threshold_small:", del_f_threshold_small)
 
-clf = NeuralNetwork(input_size=X_train.shape[-1])
+clf = LogisticRegression(input_size=X_train.shape[-1])
 clf.fit(X_train, y_train)
 
 attributes = []
@@ -276,7 +288,19 @@ fractionRows = []
 
 v1_orig = v1
 for col in X_train_orig.columns:
-    vals = X_train_orig[col].unique()
+    if dataset == 'german':
+        if "purpose" in col or "housing" in col: #dummy variables purpose=0 doesn't make sense
+            vals = [1]
+        else:
+            vals = X_train_orig[col].unique()
+    elif dataset == 'adult':
+        vals = X_train_orig[col].unique()
+    elif dataset == 'compas':
+        vals = X_train_orig[col].unique()
+    elif dataset == 'sqf':
+        vals = X_train_orig[col].unique()
+    elif dataset == 'random':
+        vals = X_train_orig[col].unique()
     for val in vals:
         idx = X_train_orig[X_train_orig[col] == val].index
         if len(idx) / len(X_train) > support:

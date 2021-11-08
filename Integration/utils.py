@@ -35,16 +35,16 @@ def logistic_loss_torch(model, x, y_true):
         return binary_cross_entropy(y_pred, torch.Tensor([y_true]))
     else:
         y_pred = model(x)
-        return binary_cross_entropy(y_pred, y_true)
+        return model.C * torch.sum(convert_grad_to_tensor(list(model.parameters()))**2)+binary_cross_entropy(y_pred, y_true)
 
 
-def svm_loss_torch(clf, x, y_true):
-    w = convert_grad_to_tensor(list(clf.parameters()))
+def svm_loss_torch(model, x, y_true):
     if isinstance(y_true, int) or isinstance(y_true, float):
         y_true = torch.Tensor([y_true])
     else:
         y_true = torch.Tensor(y_true)
-    return 1 / 2 * clf.C * torch.sum(w ** 2) + torch.mean(clf.smooth_hinge(1 - y_true * clf.decision_function(x)))
+    y_true = torch.where(y_true==1.0, 1, -1)
+    return model.C * torch.sum(convert_grad_to_tensor(list(model.lr.parameters()))**2)+torch.mean(model.smooth_hinge(1 - y_true*model.decision_function(x)))
 
 
 def convert_grad_to_ndarray(grad):
@@ -88,12 +88,6 @@ def convert_grad_to_tensor(grad):
             grad_arr = torch.cat([grad_arr, next_params])
 
     return grad_arr
-
-
-# def del_L_del_theta_i(model, x, y_true, retain_graph=False):
-#     loss = loss_func(model, x, y_true)
-#     w = [p for p in model.parameters() if p.requires_grad]
-#     return grad(loss, w, create_graph=True, retain_graph=retain_graph)
 
 
 def del_f_del_theta_i(model, x, retain_graph=False):

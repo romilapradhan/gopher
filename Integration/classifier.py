@@ -1,4 +1,4 @@
-from sklearn.linear_model import LogisticRegression as sklr
+from sklearn.linear_model import SGDClassifier
 from sklearn.svm import SVC, LinearSVC
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, plot_tree
 from sklearn.neural_network import MLPClassifier
@@ -18,39 +18,27 @@ if dtype == 'double':
     torch.set_default_tensor_type(torch.DoubleTensor)
 
 
-def binary_cross_entropy(y_pred, y_true):
-    loss = -(torch.log(y_pred + c) * y_true + torch.log(1 - y_pred + c) * (1 - y_true))
-    return loss.mean()
-
-
 class LogisticRegression(nn.Module):
     def __init__(self, input_size, learning_rate=0.05, c=0.03, epoch_num=100):
         super(LogisticRegression, self).__init__()
-        # self.sklearn_lr = sklearn.linear_model.SGDClassifier(loss='log', warm_start=True, max_iter=epoch_num,
-        # average=True, shuffle=False, learning_rate='constant', eta0=learning_rate, tol=0, alpha=c, n_jobs=1,
-        # early_stopping=False, verbose=0)
-        self.sklearn_lr = sklearn.linear_model.SGDClassifier(loss='log', warm_start=True, max_iter=epoch_num,
-                                                             average=True, shuffle=False, learning_rate='constant',
-                                                             eta0=learning_rate, alpha=c, verbose=0)
-        #         self.sklearn_lr = sklearn.linear_model.LogisticRegression(random_state=0, max_iter=100, solver='sag')
+        self.sklearn_lr = SGDClassifier(loss='log', warm_start=True, max_iter=epoch_num,
+                                        average=True, shuffle=False, learning_rate='constant',
+                                        eta0=learning_rate, alpha=c, verbose=0)
         self.lr = torch.nn.Linear(input_size, 1, bias=True)
         self.sm = torch.nn.Sigmoid()
         self.C = c
         self.epoch_num = epoch_num
-        self.criterion = binary_cross_entropy
-        self.optimizer = torch.optim.SGD(self.parameters(), lr=learning_rate, momentum=0.9, weight_decay=c)
+        self.criterion = logistic_loss_torch
+        self.optimizer = torch.optim.SGD(self.parameters(), lr=learning_rate, momentum=0.9)
 
     def forward(self, x):
         x = self.lr(x)
         x = self.sm(x)
         return x.squeeze()
 
-    def fit(self, x, y, verbose=False, use_sklearn=True):
+    def fit(self, x, y, verbose=False, use_sklearn=False):
         if use_sklearn:
             self.sklearn_lr.fit(x, y)
-            #             classes = np.unique(y)
-            #             for _ in range(epoch_num):
-            #                 self.sklearn_lr.partial_fit(x ,y, classes)
             self.C = self.sklearn_lr.C
             self.lr.weight.data = torch.Tensor(self.sklearn_lr.coef_)
             self.lr.bias.data = torch.Tensor(self.sklearn_lr.intercept_)
@@ -60,17 +48,10 @@ class LogisticRegression(nn.Module):
             y = torch.Tensor(y)
             self.train()
             for _ in range(self.epoch_num):
-                y_pred = self.forward(x)
-                loss = self.criterion(y_pred, y)
-                #                 l2_reg = torch.norm(self.lr.weight, p=2)**2
-                #                 loss += c * l2_reg
+                loss = self.criterion(self, x, y)
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
-        #                 scheduler.step()
-        #                 print(self.criterion(y_pred, y))
-        # if verbose and (epoch_num % 50):
-        #     print(f'epoch:{epoch_num}, loss:{loss.item()}')
 
     def predict_proba(self, x):
         self.eval()
@@ -82,29 +63,25 @@ class LogisticRegression(nn.Module):
         self.lr.bias.data = orig_model.lr.bias.data.clone()
 
     def partial_fit(self, x, y, learning_rate=0.05):
-        default_params = {'learning_rate': 'optimal', 'eta0': 0.0}
         params = {'learning_rate': 'constant', 'eta0': learning_rate}
         self.sklearn_lr.set_params(**params)
         self.sklearn_lr.partial_fit(x, y, classes=y.unique())
-        self.C = self.sklearn_lr.C
         self.lr.weight.data = torch.Tensor(self.sklearn_lr.coef_)
-        self.sklearn_lr.set_params(**default_params)
 
 
 class SVM(nn.Module):
-    def __init__(self, input_size, kernel='linear'):
+    def __init__(self, input_size, learning_rate=0.05, c=0.1, epoch_num=100, kernel='linear'):
         super(SVM, self).__init__()
-        self.sklearn_svc = LinearSVC(random_state=0, loss='hinge')
+        self.sklearn_svc = SGDClassifier(random_state=0, warm_start=True, max_iter=epoch_num,
+                                         average=True, shuffle=False, learning_rate='constant',
+                                         eta0=learning_rate, alpha=c, loss='hinge')
         self.lr = torch.nn.Linear(input_size, 1, bias=True)
-        self.initialize_weights(self.lr)
-        self.smooth_hinge = torch.nn.Softplus(beta=0.001)
-        #         self.smooth_hinge = torch.nn.ReLU()
+        self.optimizer = torch.optim.SGD(self.parameters(), lr=learning_rate, momentum=0.8)
+        self.smooth_hinge = torch.nn.Softplus(beta=1)
+        self.C = c
+        self.epoch_num = epoch_num
         if kernel != 'linear':
             raise NotImplementedError
-
-    def initialize_weights(self, m):
-        nn.init.kaiming_uniform_(m.weight.data)
-        m.bias.data.fill_(0)
 
     def decision_function(self, x):
         if ~isinstance(x, torch.Tensor):
@@ -116,10 +93,10 @@ class SVM(nn.Module):
         if ~isinstance(x, torch.Tensor):
             x = torch.Tensor(x)
         x = self.lr(x)
-        x = 1 - 1 / (1 + torch.exp(x))
+        x = 1 / (1 + torch.exp(-x))
         return x.squeeze()
 
-    def fit(self, x, y, c=1.0, epoch_num=1000, verbose=False, use_sklearn=False):
+    def fit(self, x, y, use_sklearn=False):
         if use_sklearn:
             self.sklearn_svc.fit(x, y)
             self.C = self.sklearn_svc.C
@@ -127,37 +104,42 @@ class SVM(nn.Module):
             self.lr.bias.data = torch.Tensor(self.sklearn_svc.intercept_)
         else:
             criterion = svm_loss_torch
-            self.C = c
-            optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
             x = torch.Tensor(x)
             y = torch.Tensor(y)
-            self.train()
-            for _ in range(epoch_num):
+            for _ in range(self.epoch_num):
                 loss = criterion(self, x, y)
-                optimizer.zero_grad()
+                self.optimizer.zero_grad()
                 loss.backward()
-                optimizer.step()
-
-        if verbose and (epoch_num % 50):
-            print(f'epoch:{epoch_num}, loss:{loss.item()}')
+                self.optimizer.step()
 
     def predict_proba(self, x):
         self.eval()
         return self.forward(torch.Tensor(x)).detach().numpy()
+    
+    def partial_fit(self, x, y, learning_rate=0.05):
+        params = {'learning_rate': 'constant', 'eta0': learning_rate}
+        self.sklearn_svc.set_params(**params)
+        self.sklearn_svc.partial_fit(x, y, classes=y.unique())
+        self.lr.weight.data = torch.Tensor(self.sklearn_svc.coef_)
+        self.lr.bias.data = torch.Tensor(self.sklearn_svc.intercept_)
 
 
 class NeuralNetwork(nn.Module):
-    def __init__(self, input_size):
+    def __init__(self, input_size, learning_rate=0.05, c=0.01, epoch_num=1000, batch_size=80):
         super(NeuralNetwork, self).__init__()
-        self.fc1 = torch.nn.Linear(input_size, 20)
+        self.fc1 = torch.nn.Linear(input_size, 10)
         self.sm1 = torch.nn.Sigmoid()
-        self.fc2 = torch.nn.Linear(20, 1)
+        self.fc2 = torch.nn.Linear(10, 1)
         self.sm2 = torch.nn.Sigmoid()
         self.input_size = input_size
-
+        self.C = c
+        self.epoch_num = epoch_num
+        self.batch_size = batch_size
+        self.criterion = binary_cross_entropy
+        self.optimizer = torch.optim.SGD(self.parameters(), lr=learning_rate, weight_decay=c, momentum=0.9)
         # best result according to grid search
-        self.sklearn_nn = MLPClassifier(random_state=0, alpha=0.01, learning_rate='adaptive', batch_size=1024,
-                                        solver='adam', hidden_layer_sizes=(20,), activation='logistic')
+        self.sklearn_nn = MLPClassifier(random_state=0, alpha=c, learning_rate='adaptive', batch_size=batch_size,
+                                        solver='adam', hidden_layer_sizes=(10,), activation='logistic')
 
     def forward(self, x):
         x = x.view(-1, self.input_size)
@@ -167,14 +149,41 @@ class NeuralNetwork(nn.Module):
         x = self.sm2(x)
         return x.squeeze()
 
-    def fit(self, x, y):
-        self.sklearn_nn.fit(x, y)
-        self.fc1.weight.data = torch.Tensor(self.sklearn_nn.coefs_[0]).T
-        self.fc1.bias.data = torch.Tensor(self.sklearn_nn.intercepts_[0]).T
-        self.fc2.weight.data = torch.Tensor(self.sklearn_nn.coefs_[1]).T
-        self.fc2.bias.data = torch.Tensor(self.sklearn_nn.intercepts_[1]).T
+    def fit(self, x, y, use_sklearn=False):
+        if use_sklearn:
+            self.sklearn_nn.fit(x, y)
+            self.fc1.weight.data = torch.Tensor(self.sklearn_nn.coefs_[0]).T
+            self.fc1.bias.data = torch.Tensor(self.sklearn_nn.intercepts_[0]).T
+            self.fc2.weight.data = torch.Tensor(self.sklearn_nn.coefs_[1]).T
+            self.fc2.bias.data = torch.Tensor(self.sklearn_nn.intercepts_[1]).T
+        else:
+            num_batches = len(x)//self.batch_size+1 if len(x)%self.batch_size!=0 else len(x)//self.batch_size
+            x = torch.Tensor(x)
+            y = torch.Tensor(y)
+            for _ in range(self.epoch_num):
+                for batch_id in range(num_batches):
+                    if batch_id < num_batches-1:
+                        x_ = x[batch_id*self.batch_size:(batch_id+1)*self.batch_size]
+                        y_ = y[batch_id*self.batch_size:(batch_id+1)*self.batch_size]
+                    else:
+                        x_ = x[batch_id*self.batch_size:]
+                        y_ = y[batch_id*self.batch_size:]
+                    y_pred = self.forward(x_)
+                    loss = self.criterion(y_pred, y_)
+                    self.optimizer.zero_grad()
+                    loss.backward()
+                    self.optimizer.step()
 
     def predict_proba(self, x):
         self.eval()
         x = torch.Tensor(x).view(-1, self.input_size)
         return self.forward(x).detach().numpy()
+    
+    def partial_fit(self, x, y, learning_rate=0.05):
+        params = {'learning_rate': 'constant', 'learning_rate_init': learning_rate}
+        self.sklearn_nn.set_params(**params)
+        self.sklearn_nn.partial_fit(x, y, classes=y.unique())
+        self.fc1.weight.data = torch.Tensor(self.sklearn_nn.coefs_[0]).T
+        self.fc1.bias.data = torch.Tensor(self.sklearn_nn.intercepts_[0]).T
+        self.fc2.weight.data = torch.Tensor(self.sklearn_nn.coefs_[1]).T
+        self.fc2.bias.data = torch.Tensor(self.sklearn_nn.intercepts_[1]).T
