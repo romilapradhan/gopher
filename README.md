@@ -2,11 +2,13 @@
 
 ## Getting Started
 
-Intergration/faster_explanation_german.ipynb contains latest explanation generation pipeline.
+explanations/removal_expl.ipynb contains removal-based explanation generation pipeline.
 
-Intergration/load_dataset.py contains loading and preprocessing of three biased datasets (**Adult, German, SQF**).
+explanations/update_expl.ipynb contains update-based explanation generation pipeline.
 
-Intergration/classifier.py contains implementation of classfiers including Logistic Regression, Support Vector Machine, and Neural Network.
+explanations/load_dataset.py contains loading and preprocessing of biased datasets (**Adult, German, SQF**).
+
+explanations/classifier.py contains implementation of classfiers including Logistic Regression, Support Vector Machine, and Neural Network.
 
 ## Classifier Hyperparameters
 
