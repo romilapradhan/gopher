@@ -1,14 +1,46 @@
 # Debugging bias: identify tuples responsible for fairness criteria violation.
 
+## Experiment Environment (also included in requirements.txt)
+```
+numpy==1.23.1
+pandas==1.3.2
+scikit_learn==1.0.2
+scipy==1.5.4
+torch==1.9.0
+tqdm==4.62.2
+```
+
 ## Getting Started
+
+### Notebooks
+
+**Below are complete notebooks showing how we generate explanations:**
 
 explanations/removal_expl.ipynb contains removal-based explanation generation pipeline.
 
 explanations/update_expl.ipynb contains update-based explanation generation pipeline.
 
-explanations/load_dataset.py contains loading and preprocessing of biased datasets (**Adult, German, SQF**).
+**For simplicity, we also prepare 2 corresponding tutorial notebooks that briefly go through the necessarily steps to generate explanations:**
+
+explanations/removal_expl_tutorial.ipynb contains necessary steps of generating removal-based explanations:
+* Choose the classifier, dataset.
+* Precompute the hessian and first-order derivatives.
+* Generate removal-based explanation by invoking ```explanation_candidate_generation``` and then filter the results based on containments by invoking ```get_top_k_expl```.
+
+explanations/update_expl_tutorial.ipynb contains necessary steps of generating removal-based explanations:
+* Choose the classifier, dataset.
+* Precompute the first-order derivatives.
+* Generate update-based explanation by invoking ```get_update_expl```.
+
+### Functions
+
+explanations/load_dataset.py contains functions of loading and preprocessing of biased datasets (**Adult, German, SQF**).
 
 explanations/classifier.py contains implementation of classfiers including Logistic Regression, Support Vector Machine, and Neural Network.
+
+explanations/influence.py contains functions of computing first-order derivatives and hessian.
+
+explanations/expl.py contains functions of generating removal-based and update-based explanation.
 
 ## Classifier Hyperparameters
 
