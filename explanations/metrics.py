@@ -11,6 +11,9 @@ with open('config.json', 'r') as f:
 if dtype == 'double':
     torch.set_default_tensor_type(torch.DoubleTensor)
 
+def computeAccuracy(y_true, y_pred):
+    return np.sum((y_pred>0.5) == y_true)/len(y_pred)
+    
 def computeFairness(y_pred, X_test, y_test, metric, dataset): 
     fairnessMetric = 0
     if dataset == 'german':
@@ -63,7 +66,7 @@ def computeFairness(y_pred, X_test, y_test, metric, dataset):
     true_positive_protected = 0
     actual_positive_protected = 0
     for i in range(len(protected_idx)):
-        if (y_test[protected_idx[i]] == 1):
+        if y_test[protected_idx[i]] == 1:
             actual_positive_protected += 1
             true_positive_protected += y_pred[protected_idx[i]]
     tpr_protected = true_positive_protected/actual_positive_protected
@@ -71,7 +74,7 @@ def computeFairness(y_pred, X_test, y_test, metric, dataset):
     true_positive_privileged = 0
     actual_positive_privileged = 0
     for i in range(len(privileged_idx)):
-        if (y_test[privileged_idx[i]] == 1):
+        if y_test[privileged_idx[i]] == 1:
             actual_positive_privileged += 1
 #             if (y_pred[privileged_idx[i]][1] > y_pred[privileged_idx[i]][0]):
             true_positive_privileged += y_pred[privileged_idx[i]]
@@ -88,7 +91,7 @@ def computeFairness(y_pred, X_test, y_test, metric, dataset):
     for i in range(len(protected_idx)):
 #         if (y_pred[protected_idx[i]][1] > y_pred[protected_idx[i]][0]):
         p_o1_s1 += y_pred[protected_idx[i]]
-        if (y_test[protected_idx[i]] == 1):
+        if y_test[protected_idx[i]] == 1:
             p_o1_y1_s1 += y_pred[protected_idx[i]]
     ppv_protected = p_o1_y1_s1/p_o1_s1
     
@@ -97,17 +100,17 @@ def computeFairness(y_pred, X_test, y_test, metric, dataset):
     for i in range(len(privileged_idx)):
 #         if (y_pred[privileged_idx[i]][1] > y_pred[privileged_idx[i]][0]):
         p_o1_s0 += y_pred[privileged_idx[i]]
-        if (y_test[privileged_idx[i]] == 1):
+        if y_test[privileged_idx[i]] == 1:
             p_o1_y1_s0 += y_pred[privileged_idx[i]]
     ppv_privileged = p_o1_y1_s0/p_o1_s0
     
     predictive_parity = ppv_protected - ppv_privileged
     
-    if (metric == 0):
+    if metric == 0:
         fairnessMetric = statistical_parity
-    elif (metric == 1):
+    elif metric == 1:
         fairnessMetric = tpr_parity
-    elif (metric == 2):
+    elif metric == 2:
         fairnessMetric = predictive_parity
         
     return fairnessMetric
@@ -214,7 +217,7 @@ def del_tpr_parity_del_theta(model, X_test_orig, X_test, y_test, dataset):
 
     actual_positive_privileged = 0
     for i in range(len(privileged_idx)):
-        if (y_test[privileged_idx[i]] == 1):
+        if y_test[privileged_idx[i]] == 1:
             actual_positive_privileged += 1
             del_f_i = del_f_del_theta_i(model, X_test[privileged_idx[i]])
             del_f_i_arr = convert_grad_to_ndarray(del_f_i)
@@ -223,7 +226,7 @@ def del_tpr_parity_del_theta(model, X_test_orig, X_test, y_test, dataset):
     
     actual_positive_protected = 0
     for i in range(len(protected_idx)):
-        if (y_test[protected_idx[i]] == 1):
+        if y_test[protected_idx[i]] == 1:
             actual_positive_protected += 1
             del_f_i = del_f_del_theta_i(model, X_test[protected_idx[i]])
             del_f_i_arr = convert_grad_to_ndarray(del_f_i)
@@ -280,7 +283,7 @@ def del_predictive_parity_del_theta(model, X_test_orig, X_test, y_test, dataset)
         del_f_i_arr = convert_grad_to_ndarray(del_f_i)
         v_protected += y_pred[protected_idx[i]]
         v_dash_protected = np.add(v_dash_protected, del_f_i_arr)
-        if (y_test[protected_idx[i]] == 1):
+        if y_test[protected_idx[i]] == 1:
             u_dash_protected = np.add(u_dash_protected, del_f_i_arr)
             u_protected += y_pred[protected_idx[i]]
     del_f_protected = (u_dash_protected * v_protected - u_protected * v_dash_protected)/(v_protected * v_protected)
@@ -294,7 +297,7 @@ def del_predictive_parity_del_theta(model, X_test_orig, X_test, y_test, dataset)
         del_f_i_arr = convert_grad_to_ndarray(del_f_i)
         v_privileged += y_pred[privileged_idx[i]]
         v_dash_privileged = np.add(v_dash_privileged, del_f_i_arr)
-        if (y_test[privileged_idx[i]] == 1):
+        if y_test[privileged_idx[i]] == 1:
             u_dash_privileged = np.add(u_dash_privileged, del_f_i_arr)
             u_privileged += y_pred[privileged_idx[i]]
     del_f_privileged = (u_dash_privileged * v_privileged - u_privileged * v_dash_privileged)/(v_privileged * v_privileged)
