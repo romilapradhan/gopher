@@ -31,43 +31,6 @@ def preprocess_german(df, preprocess):
     return df
 
 
-# def process_adult(df):
-#     df.isin(['?']).sum(axis=0)
-
-#     # replace missing values (?) to nan and then drop the columns
-#     df['country'] = df['country'].replace('?',np.nan)
-#     df['workclass'] = df['workclass'].replace('?',np.nan)
-#     df['occupation'] = df['occupation'].replace('?',np.nan)
-
-#     # dropping the NaN rows now
-#     df.dropna(how='any',inplace=True)
-#     df['income'] = df['income'].map({'<=50K': 0, '>50K': 1}).astype(int)
-#     df['gender'] = df['gender'].map({'Female': 0, 'Male': 1}).astype(int)
-# #     df = pd.concat([df, pd.get_dummies(df['gender'], prefix='gender')],axis=1)
-#     df = pd.concat([df, pd.get_dummies(df['race'], prefix='race')],axis=1)
-#     df = pd.concat([df, pd.get_dummies(df['marital'], prefix='marital')],axis=1)
-#     df = pd.concat([df, pd.get_dummies(df['workclass'], prefix='workclass')],axis=1)
-#     df = pd.concat([df, pd.get_dummies(df['relationship'], prefix='relationship')],axis=1)
-#     df = pd.concat([df, pd.get_dummies(df['occupation'], prefix='occupation')],axis=1)
-    
-#     # process age
-#     df.loc[(df['age'] >= 15) & (df['age'] <= 24) , 'age'] = 0
-#     df.loc[(df['age'] >= 25) & (df['age'] <= 34) , 'age'] = 1
-#     df.loc[(df['age'] >= 35) & (df['age'] <= 44) , 'age'] = 2
-#     df.loc[(df['age'] >= 45) & (df['age'] <= 54) , 'age'] = 3
-#     df.loc[(df['age'] >= 55) & (df['age'] <= 64) , 'age'] = 4
-#     df.loc[(df['age'] >= 65) , 'age'] = 5
-
-#     # process hours
-#     df.loc[(df['hours'] < 40), 'hours'] = 0
-#     df.loc[(df['hours'] == 40), 'hours'] = 1
-#     df.loc[(df['hours'] > 40), 'hours'] = 2
-
-#     df = df.drop(columns=['workclass', 'fnlwgt', 'education', 'occupation', \
-#                   'relationship', 'marital', 'race', 'country', 'capgain', \
-#                   'caploss'])
-#     return df
-
 def process_adult(df):
     df.isin(['?']).sum(axis=0)
     # replace missing values (?) to nan and then drop the columns
