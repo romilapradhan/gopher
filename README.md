@@ -27,7 +27,7 @@ explanations/removal_expl_tutorial.ipynb contains necessary steps of generating 
 * Precompute the hessian and first-order derivatives.
 * Generate removal-based explanation by invoking ```explanation_candidate_generation``` and then filter the results based on containments by invoking ```get_top_k_expl```.
 
-explanations/update_expl_tutorial.ipynb contains necessary steps of generating removal-based explanations:
+explanations/update_expl_tutorial.ipynb contains necessary steps of generating update-based explanations:
 * Choose the classifier, dataset.
 * Precompute the first-order derivatives.
 * Generate update-based explanation by invoking ```get_update_expl```.
