@@ -1,4 +1,4 @@
-# Debugging bias: identify tuples responsible for fairness criteria violation.
+# Gopher: Interpretable Data-Based Explanations for Fairness Debugging
 
 ## Experiment Environment (also included in requirements.txt)
 ```
