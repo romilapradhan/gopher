@@ -215,9 +215,6 @@ def get_update_expl(model, step_size, pattern_idx, X_train_orig, X_train, y_trai
     X_train_orig: the dataframe corresponding to X_train. X_train refers to the standardized training
      data in the format of ndarray.
 
-    del_f_threshold: influence lower bound for the first-level patterns. The first-level patterns with influence
-     lower than this value would be filtered out
-
     del_F_del_theta: first-order derivative of the fairness metric w.r.t. model parameters. Can be calculated by
      get_del_F_del_theta in influence.py
 
