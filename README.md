@@ -32,6 +32,8 @@ explanations/update_expl_tutorial.ipynb contains necessary steps of generating u
 * Precompute the first-order derivatives.
 * Generate update-based explanation by invoking ```get_update_expl```.
 
+**(Running notebooks would be sufficient to obtain explainations presented in the paper. In order to conduct scalability experiments, setting duplicates provided insied the notebooks it able to help test runtime vs dataset size with the same feature number and relationships, and it is recommended to use %%time inside cells to test the runtime.)**
+
 ### Functions
 
 explanations/load_dataset.py contains functions of loading and preprocessing of biased datasets (**Adult, German, SQF**).
