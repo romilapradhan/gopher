@@ -32,7 +32,6 @@ def preprocess_german(df, preprocess):
 
 
 def process_adult(df):
-    df.isin(['?']).sum(axis=0)
     # replace missing values (?) to nan and then drop the columns
     df['country'] = df['country'].replace('?',np.nan)
     df['workclass'] = df['workclass'].replace('?',np.nan)
